@@ -10,246 +10,228 @@
 </head>
 <body>
 
-  <nav class="navbar navbar-dark navbar-custom sticky-top">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="#">
-        <i class="bi bi-shop fs-3 me-2"></i>
-        <span class="fw-bold fs-4">Reservapp</span>
-      </a>
-      <ul class="nav nav-pills ms-auto" id="mainTabs">
-        <li class="nav-item">
-          <button class="nav-link active" data-tab="reservas"><i class="bi bi-calendar-check me-1"></i>Reservas</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-tab="dashboard"><i class="bi bi-bar-chart me-1"></i>Dashboard</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-tab="calendario"><i class="bi bi-calendar-week me-1"></i>Calendario</button>
-        </li>
+  <!-- ========== LOGIN / REGISTER ========== -->
+  <div id="authView">
+    <div class="auth-hero">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-5">
+            <div class="card auth-card shadow-lg border-0 mt-5">
+              <div class="card-body p-4 text-center">
+                <i class="bi bi-shop auth-logo"></i>
+                <h2 class="fw-bold mb-1">Reservapp</h2>
+                <p class="text-muted mb-4">Reserva tu mesa en minutos</p>
+
+                <ul class="nav nav-pills justify-content-center mb-4" id="authTabs">
+                  <li class="nav-item"><button class="nav-link active" data-auth="login">Iniciar sesión</button></li>
+                  <li class="nav-item"><button class="nav-link" data-auth="register">Registrarse</button></li>
+                </ul>
+
+                <form id="loginForm">
+                  <div class="mb-3">
+                    <input type="email" class="form-control" id="loginEmail" placeholder="Correo electrónico" required>
+                  </div>
+                  <div class="mb-3">
+                    <input type="password" class="form-control" id="loginPassword" placeholder="Contraseña" required>
+                  </div>
+                  <button type="submit" class="btn btn-custom w-100 mb-3">Entrar</button>
+                </form>
+
+                <form id="registerForm" class="d-none">
+                  <div class="mb-3">
+                    <input type="text" class="form-control" id="regName" placeholder="Nombre completo" required minlength="3">
+                  </div>
+                  <div class="mb-3">
+                    <input type="email" class="form-control" id="regEmail" placeholder="Correo electrónico" required>
+                  </div>
+                  <div class="mb-3">
+                    <input type="password" class="form-control" id="regPassword" placeholder="Contraseña (mín. 6 caracteres)" required minlength="6">
+                  </div>
+                  <button type="submit" class="btn btn-custom w-100 mb-3">Crear cuenta</button>
+                </form>
+
+                <div class="divider mb-3"><span>o continúa con</span></div>
+                <button class="btn btn-google w-100" id="googleBtn">
+                  <i class="bi bi-google me-2"></i>Google
+                </button>
+
+                <div id="authMessage" class="mt-3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MAIN APP (requires auth) ========== -->
+  <div id="appView" class="d-none">
+    <nav class="navbar navbar-dark navbar-custom sticky-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <i class="bi bi-shop fs-3 me-2"></i>
+          <span class="fw-bold fs-4">Reservapp</span>
+        </a>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-light small d-none d-md-inline" id="userBadge"></span>
+          <button class="btn btn-sm btn-outline-light" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <ul class="nav nav-pills mb-4" id="mainTabs">
+        <li class="nav-item"><button class="nav-link active" data-tab="reservas"><i class="bi bi-calendar-check me-1"></i><span id="tabReservasLabel">Reservas</span></button></li>
+        <li class="nav-item admin-only d-none"><button class="nav-link" data-tab="dashboard"><i class="bi bi-bar-chart me-1"></i>Dashboard</button></li>
+        <li class="nav-item admin-only d-none"><button class="nav-link" data-tab="calendario"><i class="bi bi-calendar-week me-1"></i>Calendario</button></li>
       </ul>
-    </div>
-  </nav>
 
-  <div class="container py-4">
-
-    <!-- ========== TAB: RESERVAS ========== -->
-    <div class="tab-content" id="tab-reservas">
-      <div class="row g-4">
-        <div class="col-lg-5">
-          <div class="card form-card shadow-sm" id="formCard">
-            <div class="card-header form-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i><span id="formTitle">Nueva Reserva</span></h5>
-              <span class="badge bg-light text-dark d-none" id="editingBadge">Editando #<span id="editingId"></span></span>
-            </div>
-            <div class="card-body">
-              <form id="reservationForm" novalidate>
-                <div class="mb-3">
-                  <label for="customer_name" class="form-label">Nombre completo</label>
-                  <input type="text" class="form-control" id="customer_name" required minlength="3" maxlength="100" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+">
-                  <div class="invalid-feedback">Mínimo 3 caracteres, solo letras</div>
-                </div>
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="phone" class="form-label">Teléfono</label>
-                    <input type="tel" class="form-control" id="phone" required pattern="[\d\s\-+()]{7,20}">
-                    <div class="invalid-feedback">Formato inválido (7-20 dígitos)</div>
+      <!-- TAB: Reservas -->
+      <div class="tab-content" id="tab-reservas">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card form-card shadow-sm" id="formCard">
+              <div class="card-header form-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i><span id="formTitle">Nueva Reserva</span></h5>
+                <span class="badge bg-light text-dark d-none" id="editingBadge">Editando #<span id="editingId"></span></span>
+              </div>
+              <div class="card-body">
+                <form id="reservationForm" novalidate>
+                  <div class="mb-3">
+                    <label for="customer_name" class="form-label">Nombre completo</label>
+                    <input type="text" class="form-control" id="customer_name" required minlength="3" maxlength="100">
+                    <div class="invalid-feedback">Mínimo 3 caracteres</div>
                   </div>
-                  <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" required>
-                    <div class="invalid-feedback">Email inválido</div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label for="phone" class="form-label">Teléfono</label>
+                      <input type="tel" class="form-control" id="phone" required pattern="[\d\s\-+()]{7,20}">
+                      <div class="invalid-feedback">Formato inválido</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" class="form-control" id="email" required>
+                      <div class="invalid-feedback">Email inválido</div>
+                    </div>
                   </div>
-                </div>
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="reservation_date" class="form-label">Fecha</label>
-                    <input type="date" class="form-control" id="reservation_date" required>
-                    <div class="invalid-feedback">Seleccione una fecha válida</div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label for="reservation_date" class="form-label">Fecha</label>
+                      <input type="date" class="form-control" id="reservation_date" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="reservation_time" class="form-label">Hora</label>
+                      <select class="form-select" id="reservation_time" required>
+                        <option value="">Seleccionar...</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <label for="reservation_time" class="form-label">Hora</label>
-                    <select class="form-select" id="reservation_time" required>
-                      <option value="">Seleccionar...</option>
-                    </select>
-                    <div class="invalid-feedback">Seleccione una hora</div>
+                  <div class="mb-3">
+                    <label for="guest_count" class="form-label">Personas</label>
+                    <input type="number" class="form-control" id="guest_count" min="1" max="20" value="2">
                   </div>
-                </div>
-                <div class="mb-3">
-                  <label for="guest_count" class="form-label">Cantidad de personas</label>
-                  <input type="number" class="form-control" id="guest_count" min="1" max="20" value="2" required>
-                  <div class="invalid-feedback">Entre 1 y 20 personas</div>
-                </div>
-                <div class="mb-3">
-                  <label for="special_requests" class="form-label">Solicitudes especiales</label>
-                  <textarea class="form-control" id="special_requests" rows="2" placeholder="Alergias, ocasión especial, preferencias..." maxlength="500"></textarea>
-                </div>
-                <button type="submit" class="btn btn-custom w-100" id="submitBtn">
-                  <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
-                  <span id="submitText"><i class="bi bi-check-circle me-1"></i>Confirmar Reserva</span>
-                </button>
-                <button type="button" class="btn btn-outline-secondary w-100 mt-2 d-none" id="cancelEditBtn">
-                  <i class="bi bi-x-circle me-1"></i>Cancelar edición
-                </button>
-              </form>
+                  <div class="mb-3">
+                    <label for="special_requests" class="form-label">Solicitudes especiales</label>
+                    <textarea class="form-control" id="special_requests" rows="2" maxlength="500"></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-custom w-100" id="submitBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
+                    <span id="submitText"><i class="bi bi-check-circle me-1"></i>Confirmar Reserva</span>
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary w-100 mt-2 d-none" id="cancelEditBtn">Cancelar edición</button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="col-lg-7">
-          <div class="card shadow-sm">
-            <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-              <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Reservas</h5>
-              <div class="d-flex flex-wrap gap-2">
-                <input type="date" class="form-control form-control-sm" id="filterDate" style="width:140px">
-                <input type="text" class="form-control form-control-sm" id="filterName" placeholder="Nombre" style="width:120px">
-                <input type="text" class="form-control form-control-sm" id="filterPhone" placeholder="Teléfono" style="width:120px">
-                <select class="form-select form-select-sm" id="filterStatus" style="width:120px">
-                  <option value="">Todos</option>
-                  <option value="1">Confirmada</option>
-                  <option value="2">Cancelada</option>
-                  <option value="3">Completada</option>
-                </select>
-                <button class="btn btn-sm btn-outline-custom" id="clearFiltersBtn"><i class="bi bi-x-lg"></i></button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="text-center py-5 d-none" id="loadingState">
-                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
-                <p class="mt-2 text-muted">Cargando reservas...</p>
-              </div>
-              <div class="text-center text-muted py-5" id="emptyState">
-                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                <span>No hay reservas con los filtros seleccionados</span>
-              </div>
-              <div id="tableWrapper" class="d-none">
-                <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th class="sortable" data-sort="customer_name">Cliente <i class="bi bi-arrow-down-up"></i></th>
-                        <th class="sortable" data-sort="reservation_date">Fecha <i class="bi bi-arrow-down-up"></i></th>
-                        <th>Hora</th>
-                        <th class="sortable" data-sort="guest_count">Personas <i class="bi bi-arrow-down-up"></i></th>
-                        <th>Mesa</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody id="reservationsBody"></tbody>
-                  </table>
+          <div class="col-lg-7">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i><span id="listTitle">Reservas</span></h5>
+                <div class="d-flex flex-wrap gap-2" id="filterContainer">
+                  <input type="date" class="form-control form-control-sm" id="filterDate" style="width:140px">
+                  <input type="text" class="form-control form-control-sm" id="filterName" placeholder="Nombre" style="width:120px">
+                  <input type="text" class="form-control form-control-sm" id="filterPhone" placeholder="Teléfono" style="width:120px">
+                  <select class="form-select form-select-sm" id="filterStatus" style="width:120px">
+                    <option value="">Todos</option>
+                    <option value="1">Confirmada</option>
+                    <option value="2">Cancelada</option>
+                    <option value="3">Completada</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-custom" id="clearFiltersBtn"><i class="bi bi-x-lg"></i></button>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                  <small class="text-muted" id="paginationInfo"></small>
-                  <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+              </div>
+              <div class="card-body">
+                <div class="text-center py-5 d-none" id="loadingState">
+                  <div class="spinner-border text-primary"><span class="visually-hidden">Cargando...</span></div>
+                  <p class="mt-2 text-muted">Cargando reservas...</p>
+                </div>
+                <div class="text-center text-muted py-5" id="emptyState">
+                  <i class="bi bi-inbox fs-1 d-block mb-2"></i><span>No hay reservas</span>
+                </div>
+                <div id="tableWrapper" class="d-none">
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th class="sortable" data-sort="customer_name">Cliente <i class="bi bi-arrow-down-up"></i></th>
+                          <th class="sortable" data-sort="reservation_date">Fecha <i class="bi bi-arrow-down-up"></i></th>
+                          <th>Hora</th>
+                          <th class="sortable" data-sort="guest_count">Pers. <i class="bi bi-arrow-down-up"></i></th>
+                          <th>Mesa</th>
+                          <th>Estado</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody id="reservationsBody"></tbody>
+                    </table>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted" id="paginationInfo"></small>
+                    <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========== TAB: DASHBOARD ========== -->
-    <div class="tab-content d-none" id="tab-dashboard">
-      <div class="row g-3 mb-4" id="statsCards">
-        <div class="col-md-3">
-          <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-icon bg-primary-subtle text-primary mb-2"><i class="bi bi-calendar-check fs-3"></i></div>
-              <h3 class="fw-bold mb-0" id="statTodayReservations">0</h3>
-              <small class="text-muted">Reservas hoy</small>
-            </div>
-          </div>
+      <!-- TAB: Dashboard (admin only) -->
+      <div class="tab-content d-none" id="tab-dashboard">
+        <div class="row g-3 mb-4" id="statsCards">
+          <div class="col-md-3"><div class="card stat-card border-0 shadow-sm"><div class="card-body text-center"><div class="stat-icon bg-primary-subtle text-primary mb-2"><i class="bi bi-calendar-check fs-3"></i></div><h3 class="fw-bold mb-0" id="statTodayReservations">0</h3><small class="text-muted">Hoy</small></div></div></div>
+          <div class="col-md-3"><div class="card stat-card border-0 shadow-sm"><div class="card-body text-center"><div class="stat-icon bg-success-subtle text-success mb-2"><i class="bi bi-check-circle fs-3"></i></div><h3 class="fw-bold mb-0" id="statConfirmed">0</h3><small class="text-muted">Confirmadas</small></div></div></div>
+          <div class="col-md-3"><div class="card stat-card border-0 shadow-sm"><div class="card-body text-center"><div class="stat-icon bg-danger-subtle text-danger mb-2"><i class="bi bi-x-circle fs-3"></i></div><h3 class="fw-bold mb-0" id="statCancelled">0</h3><small class="text-muted">Canceladas</small></div></div></div>
+          <div class="col-md-3"><div class="card stat-card border-0 shadow-sm"><div class="card-body text-center"><div class="stat-icon bg-warning-subtle text-warning mb-2"><i class="bi bi-people fs-3"></i></div><h3 class="fw-bold mb-0" id="statCapacity">0%</h3><small class="text-muted">Ocupación</small></div></div></div>
         </div>
-        <div class="col-md-3">
-          <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-icon bg-success-subtle text-success mb-2"><i class="bi bi-check-circle fs-3"></i></div>
-              <h3 class="fw-bold mb-0" id="statConfirmed">0</h3>
-              <small class="text-muted">Confirmadas</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-icon bg-danger-subtle text-danger mb-2"><i class="bi bi-x-circle fs-3"></i></div>
-              <h3 class="fw-bold mb-0" id="statCancelled">0</h3>
-              <small class="text-muted">Canceladas</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-icon bg-warning-subtle text-warning mb-2"><i class="bi bi-people fs-3"></i></div>
-              <h3 class="fw-bold mb-0" id="statCapacity">0%</h3>
-              <small class="text-muted">Ocupación</small>
-            </div>
-          </div>
-        </div>
+        <div class="card shadow-sm"><div class="card-header"><h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Reservas del día</h5></div><div class="card-body p-0"><div class="list-group list-group-flush" id="dailyReservations"></div></div></div>
       </div>
-      <div class="card shadow-sm">
-        <div class="card-header"><h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Reservas del día</h5></div>
-        <div class="card-body p-0">
-          <div class="list-group list-group-flush" id="dailyReservations"></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- ========== TAB: CALENDARIO ========== -->
-    <div class="tab-content d-none" id="tab-calendario">
-      <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <button class="btn btn-outline-custom btn-sm" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
-          <h5 class="mb-0" id="calendarTitle">Mes</h5>
-          <button class="btn btn-outline-custom btn-sm" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
-        </div>
-        <div class="card-body">
-          <div class="row g-1 text-center fw-bold mb-2">
-            <div class="col">Dom</div><div class="col">Lun</div><div class="col">Mar</div>
-            <div class="col">Mié</div><div class="col">Jue</div><div class="col">Vie</div><div class="col">Sáb</div>
+      <!-- TAB: Calendario (admin only) -->
+      <div class="tab-content d-none" id="tab-calendario">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <button class="btn btn-outline-custom btn-sm" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
+            <h5 class="mb-0" id="calendarTitle">Mes</h5>
+            <button class="btn btn-outline-custom btn-sm" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
           </div>
-          <div id="calendarGrid" class="row g-1"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Modal de confirmación -->
-  <div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body text-center py-4">
-          <i class="bi bi-exclamation-triangle text-warning fs-1 d-block mb-2"></i>
-          <p id="confirmMessage" class="mb-0">¿Está seguro?</p>
-        </div>
-        <div class="modal-footer border-0 justify-content-center pt-0">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-danger" id="confirmAction">Confirmar</button>
+          <div class="card-body">
+            <div class="row g-1 text-center fw-bold mb-2">
+              <div class="col">Dom</div><div class="col">Lun</div><div class="col">Mar</div><div class="col">Mié</div><div class="col">Jue</div><div class="col">Vie</div><div class="col">Sáb</div>
+            </div>
+            <div id="calendarGrid" class="row g-1"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de detalle -->
-  <div class="modal fade" id="detailModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="mb-0">Detalle de Reserva</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body" id="detailBody"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast container -->
+  <!-- Modals -->
+  <div class="modal fade" id="confirmModal" tabindex="-1"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-body text-center py-4"><i class="bi bi-exclamation-triangle text-warning fs-1 d-block mb-2"></i><p id="confirmMessage" class="mb-0"></p></div><div class="modal-footer border-0 justify-content-center pt-0"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-danger" id="confirmAction">Confirmar</button></div></div></div></div>
+  <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="mb-0">Detalle de Reserva</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailBody"></div></div></div></div>
   <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
 
-  <footer class="footer text-center py-3 mt-4">
-    <div class="container"><p class="mb-0 small">&copy; 2024 Reservapp — Todos los derechos reservados</p></div>
-  </footer>
-
+  <script src="https://accounts.google.com/gsi/client"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="app.js"></script>
 </body>

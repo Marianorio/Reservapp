@@ -15,14 +15,14 @@ function isValidTime(date, time) {
 }
 
 const reservationService = {
-  async list(query) {
+  async list(query, user) {
     const page = parseInt(query.page) || 1;
     const limit = Math.min(parseInt(query.limit) || 20, 100);
     const sortBy = query.sortBy || 'reservation_date';
     const sortOrder = query.sortOrder || 'desc';
     const status_id = query.status_id ? parseInt(query.status_id) : undefined;
 
-    return reservationRepository.findAll({
+    const filters = {
       date: query.date,
       customer_name: query.customer_name,
       phone: query.phone,
@@ -32,16 +32,26 @@ const reservationService = {
       limit,
       sortBy,
       sortOrder,
-    });
+    };
+
+    if (user && user.role !== 'admin') {
+      filters.user_id = user.id;
+    }
+
+    return reservationRepository.findAll(filters);
   },
 
-  async getById(id) {
+  async getById(id, user) {
     const reservation = await reservationRepository.findById(id);
     if (!reservation) throw new AppError('Reserva no encontrada', 404);
+
+    if (user && user.role !== 'admin' && reservation.user_id !== user.id) {
+      throw new AppError('No tienes permiso para ver esta reserva', 403);
+    }
     return reservation;
   },
 
-  async create(data) {
+  async create(data, user) {
     if (!isValidTime(data.reservation_date, data.reservation_time)) {
       throw new AppError('La hora seleccionada está fuera del horario de atención', 422);
     }
@@ -67,10 +77,7 @@ const reservationService = {
     );
 
     if (occupiedCapacity + data.guest_count > totalCapacity) {
-      throw new AppError(
-        'El restaurante ha alcanzado su capacidad máxima en este horario',
-        409
-      );
+      throw new AppError('El restaurante ha alcanzado su capacidad máxima en este horario', 409);
     }
 
     const table = await tableRepository.findAvailable(
@@ -78,10 +85,7 @@ const reservationService = {
     );
 
     if (!table) {
-      throw new AppError(
-        'No hay mesas disponibles para la cantidad de personas en el horario solicitado',
-        409
-      );
+      throw new AppError('No hay mesas disponibles para la cantidad de personas en el horario solicitado', 409);
     }
 
     const existing = await reservationRepository.findOverlapping(
@@ -93,6 +97,7 @@ const reservationService = {
     }
 
     const reservation = await reservationRepository.create({
+      user_id: user ? user.id : null,
       customer_id: customer.id,
       table_id: table.id,
       reservation_date: data.reservation_date,
@@ -105,15 +110,19 @@ const reservationService = {
     await logRepository.create({
       reservation_id: reservation.id,
       action: 'created',
-      changes: data,
+      changes: { ...data, user_id: user ? user.id : null },
     });
 
     return reservationRepository.findById(reservation.id);
   },
 
-  async update(id, data) {
+  async update(id, data, user) {
     const existing = await reservationRepository.findById(id);
     if (!existing) throw new AppError('Reserva no encontrada', 404);
+
+    if (user && user.role !== 'admin' && existing.user_id !== user.id) {
+      throw new AppError('No tienes permiso para modificar esta reserva', 403);
+    }
 
     const updates = {};
 
@@ -136,7 +145,9 @@ const reservationService = {
         throw new AppError('La hora seleccionada está fuera del horario de atención', 422);
       }
 
-      const table = await tableRepository.findAvailable(date, time, data.guest_count || existing.guest_count, RESTAURANT.defaultDuration);
+      const table = await tableRepository.findAvailable(
+        date, time, data.guest_count || existing.guest_count, RESTAURANT.defaultDuration
+      );
       if (!table) throw new AppError('No hay mesas disponibles para la nueva configuración', 409);
 
       updates.table_id = table.id;
@@ -162,9 +173,13 @@ const reservationService = {
     return reservationRepository.findById(reservation.id);
   },
 
-  async delete(id) {
+  async delete(id, user) {
     const existing = await reservationRepository.findById(id);
     if (!existing) throw new AppError('Reserva no encontrada', 404);
+
+    if (user && user.role !== 'admin' && existing.user_id !== user.id) {
+      throw new AppError('No tienes permiso para cancelar esta reserva', 403);
+    }
 
     const reservation = await reservationRepository.delete(id);
 

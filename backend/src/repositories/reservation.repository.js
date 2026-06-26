@@ -1,11 +1,15 @@
 const pool = require('../config/database');
 
 const reservationRepository = {
-  async findAll({ date, customer_name, phone, status_id, guest_count, page, limit, sortBy, sortOrder }) {
+  async findAll({ date, customer_name, phone, status_id, guest_count, user_id, page, limit, sortBy, sortOrder }) {
     const conditions = [];
     const params = [];
     let paramIndex = 1;
 
+    if (user_id) {
+      conditions.push(`r.user_id = $${paramIndex++}`);
+      params.push(user_id);
+    }
     if (date) {
       conditions.push(`r.reservation_date = $${paramIndex++}`);
       params.push(date);
@@ -123,11 +127,11 @@ const reservationRepository = {
     return result.rows;
   },
 
-  async create({ customer_id, table_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes }) {
+  async create({ user_id, customer_id, table_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes }) {
     const result = await pool.query(
-      `INSERT INTO reservations (customer_id, table_id, status_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes)
-       VALUES ($1, $2, 1, $3, $4, $5, $6, $7) RETURNING *`,
-      [customer_id, table_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes]
+      `INSERT INTO reservations (user_id, customer_id, table_id, status_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes)
+       VALUES ($1, $2, $3, 1, $4, $5, $6, $7, $8) RETURNING *`,
+      [user_id, customer_id, table_id, reservation_date, reservation_time, guest_count, special_requests, duration_minutes]
     );
     return result.rows[0];
   },
