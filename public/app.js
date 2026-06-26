@@ -66,12 +66,8 @@ function showApp() {
   document.getElementById('tabReservasLabel').textContent = isAdmin ? 'Reservas' : 'Mis Reservas';
   document.getElementById('listTitle').textContent = isAdmin ? 'Reservas' : 'Mis Reservas';
 
-  // For users, restrict filters
-  if (!isAdmin) {
-    document.getElementById('filterContainer').classList.add('d-none');
-  }
   document.getElementById('reservation_date').value = today;
-  document.getElementById('filterDate').value = today;
+  document.getElementById('filterDate').value = '';
   loadReservations();
 }
 
@@ -315,7 +311,7 @@ document.getElementById('filterName')?.addEventListener('input', debounce(() => 
 document.getElementById('filterPhone')?.addEventListener('input', debounce(() => { currentPage = 1; loadReservations(); }, 400));
 document.getElementById('filterStatus')?.addEventListener('change', () => { currentPage = 1; loadReservations(); });
 document.getElementById('clearFiltersBtn')?.addEventListener('click', () => {
-  document.getElementById('filterDate').value = today;
+  document.getElementById('filterDate').value = '';
   if (document.getElementById('filterName')) document.getElementById('filterName').value = '';
   if (document.getElementById('filterPhone')) document.getElementById('filterPhone').value = '';
   if (document.getElementById('filterStatus')) document.getElementById('filterStatus').value = '';
