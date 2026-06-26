@@ -17,8 +17,26 @@ function showToast(msg, type) {
   setTimeout(() => el.remove(), 4000);
 }
 
-function formatDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' }); }
+function parseDate(d) {
+  if (!d) return new Date();
+  if (d.includes('T')) return new Date(d);
+  return new Date(d + 'T12:00:00');
+}
+function formatDate(d) { return parseDate(d).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' }); }
 function formatTime(t) { return t?.slice(0,5)||''; }
+
+const statusNames = {
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
+  completed: 'Completada',
+  no_show: 'No asistió',
+};
+const statusColors = {
+  confirmed: 'success',
+  cancelled: 'danger',
+  completed: 'secondary',
+  no_show: 'warning',
+};
 
 function getToken() { return localStorage.getItem('token'); }
 function setToken(t) { if(t) localStorage.setItem('token',t); else localStorage.removeItem('token'); }
@@ -212,23 +230,28 @@ async function loadReservations() {
 }
 
 function renderTable(data) {
-  const colors = { confirmed:'success', cancelled:'danger', completed:'secondary', no_show:'warning' };
   const isAdmin = currentUser?.role === 'admin';
   document.getElementById('reservationsBody').innerHTML = data.map(r => `
     <tr class="reservation-row">
-      <td><strong>${r.customer_name}</strong></td>
+      <td><strong>${escHtml(r.customer_name)}</strong></td>
       <td>${formatDate(r.reservation_date)}</td>
       <td><span class="badge bg-secondary">${formatTime(r.reservation_time)}</span></td>
       <td>${r.guest_count}</td>
       <td>Mesa ${r.table_number}</td>
-      <td><span class="badge bg-${colors[r.status_name]||'secondary'}">${r.status_name}</span></td>
+      <td><span class="badge bg-${statusColors[r.status_name]||'secondary'}">${statusNames[r.status_name]||r.status_name}</span></td>
       <td>
-        <button class="btn btn-sm btn-outline-custom me-1" onclick='showDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
-        ${isAdmin || r.user_id === currentUser?.id ? `<button class="btn btn-sm btn-outline-custom me-1" onclick='editReservation(${r.id})' title="Editar"><i class="bi bi-pencil"></i></button>` : ''}
-        ${r.status_name === 'confirmed' ? `<button class="btn btn-sm btn-outline-danger" onclick='cancelReservation(${r.id})' title="Cancelar"><i class="bi bi-x-circle"></i></button>` : ''}
+        <button class="btn btn-sm btn-outline-custom me-1" onclick="showDetailById(${r.id})" title="Ver"><i class="bi bi-eye"></i></button>
+        ${isAdmin || r.user_id === currentUser?.id ? `<button class="btn btn-sm btn-outline-custom me-1" onclick="editReservation(${r.id})" title="Editar"><i class="bi bi-pencil"></i></button>` : ''}
+        ${r.status_name === 'confirmed' ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelReservation(${r.id})" title="Cancelar"><i class="bi bi-x-circle"></i></button>` : ''}
       </td>
     </tr>
   `).join('');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 function renderPagination(page, total, limit) {
@@ -243,19 +266,25 @@ function renderPagination(page, total, limit) {
   document.querySelectorAll('#pagination .page-link').forEach(btn => btn.addEventListener('click', () => { currentPage = parseInt(btn.dataset.page); loadReservations(); }));
 }
 
-function showDetail(r) {
-  const colors = { confirmed:'success', cancelled:'danger', completed:'secondary', no_show:'warning' };
-  document.getElementById('detailBody').innerHTML = `
-    <div class="row mb-2"><div class="col-4 fw-bold">Cliente:</div><div class="col-8">${r.customer_name}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Teléfono:</div><div class="col-8">${r.customer_phone}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Email:</div><div class="col-8">${r.customer_email}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Fecha:</div><div class="col-8">${formatDate(r.reservation_date)}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Hora:</div><div class="col-8">${formatTime(r.reservation_time)}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Personas:</div><div class="col-8">${r.guest_count}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Mesa:</div><div class="col-8">${r.table_number}</div></div>
-    <div class="row mb-2"><div class="col-4 fw-bold">Estado:</div><div class="col-8"><span class="badge bg-${colors[r.status_name]||'secondary'}">${r.status_name}</span></div></div>
-    ${r.special_requests ? `<div class="row mb-2"><div class="col-4 fw-bold">Notas:</div><div class="col-8">${r.special_requests}</div></div>` : ''}`;
-  bootstrap.Modal.getOrCreateInstance('#detailModal').show();
+async function showDetailById(id) {
+  try {
+    const res = await fetch(`${API}/reservations/${id}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+    const result = await res.json();
+    const r = result.data || result;
+    document.getElementById('detailBody').innerHTML = `
+      <div class="row mb-2"><div class="col-4 fw-bold">Cliente:</div><div class="col-8">${escHtml(r.customer_name)}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Teléfono:</div><div class="col-8">${escHtml(r.customer_phone||'')}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Email:</div><div class="col-8">${escHtml(r.customer_email||'')}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Fecha:</div><div class="col-8">${formatDate(r.reservation_date)}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Hora:</div><div class="col-8">${formatTime(r.reservation_time)}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Personas:</div><div class="col-8">${r.guest_count}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Mesa:</div><div class="col-8">${r.table_number}</div></div>
+      <div class="row mb-2"><div class="col-4 fw-bold">Estado:</div><div class="col-8"><span class="badge bg-${statusColors[r.status_name]||'secondary'}">${statusNames[r.status_name]||r.status_name}</span></div></div>
+      ${r.special_requests ? `<div class="row mb-2"><div class="col-4 fw-bold">Notas:</div><div class="col-8">${escHtml(r.special_requests)}</div></div>` : ''}`;
+    bootstrap.Modal.getOrCreateInstance('#detailModal').show();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
 }
 
 async function editReservation(id) {
