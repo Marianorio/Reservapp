@@ -1,4 +1,4 @@
 node_modules/
 .env
-backend/setup.ps1
-backend/schema.sql
+backend/logs/
+backend/package-lock.json

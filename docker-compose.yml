@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: reservapp-db
+    environment:
+      POSTGRES_DB: reservapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Kriptonita}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/initDb.js:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: ./backend
+    container_name: reservapp-app
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: reservapp
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-Kriptonita}
+      PORT: 3000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./public:/app/public
+
+volumes:
+  pgdata:
