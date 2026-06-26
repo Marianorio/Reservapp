@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservapp - Reserva tu mesa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-dark navbar-custom">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <i class="bi bi-shop fs-3 me-2"></i>
+        <span class="fw-bold fs-4">Reservapp</span>
+      </a>
+      <span class="navbar-text text-light d-none d-md-block">
+        <i class="bi bi-telephone me-1"></i> (555) 123-4567
+      </span>
+    </div>
+  </nav>
+
+  <div class="hero-section text-center">
+    <div class="container">
+      <h1 class="display-4 fw-bold">Reserva tu mesa</h1>
+      <p class="lead">Disfruta de la mejor experiencia gastronómica. Reserva fácil y rápido.</p>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="card form-card shadow-sm">
+          <div class="card-header form-header">
+            <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Nueva Reserva</h5>
+          </div>
+          <div class="card-body">
+            <form id="reservationForm">
+              <div class="mb-3">
+                <label for="customer_name" class="form-label">Nombre completo</label>
+                <input type="text" class="form-control" id="customer_name" required>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="phone" class="form-label">Teléfono</label>
+                  <input type="tel" class="form-control" id="phone" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" required>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="reservation_date" class="form-label">Fecha</label>
+                  <input type="date" class="form-control" id="reservation_date" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="reservation_time" class="form-label">Hora</label>
+                  <input type="time" class="form-control" id="reservation_time" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="guest_count" class="form-label">Cantidad de personas</label>
+                <input type="number" class="form-control" id="guest_count" min="1" max="20" value="2" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="special_requests" class="form-label">Solicitudes especiales</label>
+                <textarea class="form-control" id="special_requests" rows="2" placeholder="Alergias, ocasión especial, preferencias..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-custom w-100">
+                <i class="bi bi-check-circle me-1"></i> Confirmar Reserva
+              </button>
+            </form>
+            <div id="formMessage" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Mis Reservas</h5>
+            <input type="date" class="form-control form-control-sm w-auto" id="filterDate">
+          </div>
+          <div class="card-body">
+            <div id="reservationsList">
+              <div class="text-center text-muted py-4" id="emptyState">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <span>No hay reservas registradas</span>
+              </div>
+              <div id="tableWrapper" class="d-none">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Personas</th>
+                        <th>Contacto</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody id="reservationsBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer text-center py-3">
+    <div class="container">
+      <p class="mb-0 small">&copy; 2024 Reservapp — Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
